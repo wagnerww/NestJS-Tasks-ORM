@@ -11,6 +11,7 @@ import {
   ValidationPipe,
   ParseIntPipe,
   UseGuards,
+  Logger,
 } from '@nestjs/common';
 import { TasksService } from './tasks.service';
 import { CreateTaskDto } from './dto/create-task.dto.';
@@ -21,10 +22,13 @@ import { GetTasksFilterDto } from './dto/get-tasks-filter.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { User } from '../auth/user.entity';
 import { GetUser } from '../auth/get-user.decorator';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
 @Controller('tasks')
-@UseGuards(AuthGuard())
+@ApiBearerAuth()
 export class TasksController {
+  private logger = new Logger('TasksController');
+
   constructor(private tasksServices: TasksService) {}
 
   @Get()
@@ -32,6 +36,11 @@ export class TasksController {
     @Query(ValidationPipe) filterDto: GetTasksFilterDto,
     @GetUser() user: User,
   ): Promise<Task[]> {
+    this.logger.verbose(
+      `User "${user.username}"retrivening all tasks. Filters:${JSON.stringify(
+        filterDto,
+      )}`,
+    );
     return this.tasksServices.getTasks(filterDto, user);
   }
 
